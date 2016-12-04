@@ -17,7 +17,7 @@ public class StandardCalculator implements Calculator {
 
         return (double)figureComicCount / db.getComics().size();
     }
-    
+
     /* Calculate actual influence of a character based on his influence and work activity
      * and his co-figures
      */
@@ -50,6 +50,8 @@ public class StandardCalculator implements Calculator {
         double part1 = coFigureInfluence / totalInfluence;
         double part2 = (double) comics.size() / totalComics;
 
-        return part1 * part2;
+        double result = part1 * part2;
+
+        return result;
     }
 }

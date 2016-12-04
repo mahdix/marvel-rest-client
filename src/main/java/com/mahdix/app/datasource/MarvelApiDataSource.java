@@ -4,6 +4,7 @@ import java.util.*;
 import java.text.*;
 
 import com.github.codingricky.marvel.model.Comic;
+import com.github.codingricky.marvel.model.ComicSummary;
 import com.github.codingricky.marvel.model.Container;
 import com.github.codingricky.marvel.model.ComicList;
 import com.github.codingricky.marvel.model.Event;
@@ -38,9 +39,9 @@ public class MarvelApiDataSource implements DataSource {
         log("Start updating database...");
 
         try {
-            readAllCharacters();
-            readAllComics();
-            readAllRoles();
+            //Other calls (to fetch Comics and their characters)  are SOOOO SLOW. 
+            //I just read information about comics and roles inside above function call.
+            readAllData();
         } catch (Exception exc) {
             exc.printStackTrace();
             System.exit(-1);
@@ -55,9 +56,12 @@ public class MarvelApiDataSource implements DataSource {
         System.out.println(dateFormat.format(date)+ "\t" + message);
     }
 
-    private void readAllCharacters() throws Exception {
-        Map<Integer, Figure> result = db.getFigures();
-        int currentOffset = result.size();
+    private void readAllData() throws Exception {
+        Map<Integer, Figure> figures = db.getFigures();
+        Map<Integer, MComic> comics = db.getComics();
+        List<Role> roles = db.getRoles();
+
+        int currentOffset = figures.size();
         int totalCount = -1;
 
         while ( totalCount == -1 || currentOffset < totalCount ) {
@@ -67,18 +71,39 @@ public class MarvelApiDataSource implements DataSource {
             Container<MarvelCharacter> data = characters.getData();
 
             for(MarvelCharacter mc: data.getResults()) {
-                result.put(mc.getId(), new Figure(mc.getId(), mc.getName()));
+                Figure figure = new Figure(mc.getId(), mc.getName());
+
+                figures.put(mc.getId(), figure);
+
+                //Also read this character's Comics and update database
+                for(ComicSummary summary: mc.getComics().getItems() ) {
+                    String uri = summary.getResourceURI();
+                    String title = summary.getName();
+
+                    //uri has this form: http://gateway.marvel.com/v1/public/comics/21546
+                    int id = Integer.valueOf(uri.substring(uri.lastIndexOf('/')+1));
+
+                    if ( !comics.containsKey(id) ) {
+                        comics.put(id, new MComic(id, title));
+                    }
+
+                    MComic thisComic = comics.get(id);
+
+                    //add a new Role
+                    roles.add(new Role(figure, thisComic));
+                }
             }
 
             totalCount = data.getTotal();
             currentOffset += data.getCount();
-            log(String.format("%d/%d comic characters read...",currentOffset, totalCount));
+            log(String.format("%d/%d comic characters processed...",currentOffset, totalCount));
         }
 
         db.save();
         log("DB saved " + db.toString());
     }
 
+    //Kept for archival purpose only.
     private void readAllComics() throws Exception {
         Map<Integer, MComic> result = db.getComics();
         int initialSize = result.size();
@@ -108,6 +133,7 @@ public class MarvelApiDataSource implements DataSource {
         }
     }
 
+    //Kept for archival purpose only.
     private void readAllRoles() throws Exception {
         List<Role> result = db.getRoles();
         Map<Integer, MComic> comics = db.getComics();
@@ -118,18 +144,20 @@ public class MarvelApiDataSource implements DataSource {
         for(Map.Entry<Integer, MComic> entry: comics.entrySet() ) {
             MComic comic = entry.getValue();
 
-            readComicRoles(result, comic, figures);
+            int readCount = readComicRoles(result, comic, figures);
             counter++;
-            log(String.format("%d/%d comics character roles read...", counter, comics.size()));
+            log(String.format("[%d roles read for %d] %d/%d comics processed for roles..", readCount, comic.getId(), counter, comics.size()));
 
             db.save();
             log("DB saved " + db.toString());
         }
     }
 
-    private void readComicRoles(List<Role> result, MComic comic, Map<Integer, Figure> figures) throws Exception {
-        int currentOffset = result.size();
+    //Kept for archival purpose only.
+    private int readComicRoles(List<Role> result, MComic comic, Map<Integer, Figure> figures) throws Exception {
+        int currentOffset = 0;
         int totalCount = -1;
+        int addedCount = 0;
 
         int comicId = comic.getId();
 
@@ -141,10 +169,13 @@ public class MarvelApiDataSource implements DataSource {
 
             for(MarvelCharacter mc: data.getResults()) {
                 result.add(new Role(figures.get(mc.getId()), comic));
+                addedCount++;
             }
 
             totalCount = data.getTotal();
             currentOffset += data.getCount();
         }
+
+        return addedCount;
     }
 }

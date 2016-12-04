@@ -55,7 +55,7 @@ public class ComicDatabase {
         File f = new File("db");
         if(f.exists() && !f.isDirectory()) { 
             //if db file exists, read it to continue update process
-            loadDatabase("db");
+            loadDatabase();
         } else {
             //just create an empty db
             figures = new HashMap<>();
@@ -64,25 +64,25 @@ public class ComicDatabase {
         }
     }
 
-    private void loadDatabase(String filePath) {
+    private void loadDatabase() {
         try {
-            FileInputStream fileIn = new FileInputStream(filePath);
+            FileInputStream fileIn = new FileInputStream("db");
             ObjectInputStream in = new ObjectInputStream(fileIn);
 
             ArrayList<Figure> figures = (ArrayList<Figure>)in.readObject();
-            ArrayList<MComic> comics = (ArrayList<MComic>)in.readObject();
-            List<Role> roles = (List<Role>)in.readObject();
-
-            this.roles = roles;
             this.figures = new HashMap<>();
             for(Figure f: figures) {
                 this.figures.put(f.getId(), f);
             }
 
+            ArrayList<MComic> comics = (ArrayList<MComic>)in.readObject();
             this.comics = new HashMap<>();
             for(MComic m: comics) {
                 this.comics.put(m.getId(), m);
             }
+
+            List<Role> roles = (List<Role>)in.readObject();
+            this.roles = roles;
 
             in.close();
             fileIn.close();
@@ -91,6 +91,25 @@ public class ComicDatabase {
         }catch(ClassNotFoundException c) {
             c.printStackTrace();
         }
+    }
+
+    public boolean save() {
+        try {
+            FileOutputStream fileOut = new FileOutputStream("db");
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+
+            out.writeObject(this.getFiguresList());
+            out.writeObject(this.getComicsList());
+            out.writeObject(this.roles);
+
+            out.close();
+            fileOut.close();
+        } catch(IOException exc) {
+            exc.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
     public ComicDatabase(Map<Integer, Figure> figures, Map<Integer, MComic> comics, List<Role> roles) {
@@ -108,7 +127,7 @@ public class ComicDatabase {
         return result;
     }
 
-    private List<MComic> getComicsList() {
+    public List<MComic> getComicsList() {
         List<MComic> result = new ArrayList<>();
         for(Map.Entry<Integer, MComic> item: comics.entrySet()) {
             result.add(item.getValue());
@@ -129,7 +148,14 @@ public class ComicDatabase {
         return result;
     }
 
+    private Map<Integer, List<MComic>> fcCache = new HashMap<>();
+
+    //This is a frequent and rather expensive call, so we will cache it.
     public List<MComic> getFigureComics(Figure f) {
+        if ( fcCache.containsKey(f.getId())) {
+            return fcCache.get(f.getId());
+        }
+
         List<MComic> result = new ArrayList<>();
 
         for(Role r: roles) {
@@ -138,28 +164,9 @@ public class ComicDatabase {
             }
         }
 
+        fcCache.put(f.getId(), result);
+
         return result;
-    }
-
-    public boolean save() {
-        try {
-            String filePath = "db";
-
-            FileOutputStream fileOut = new FileOutputStream(filePath);
-            ObjectOutputStream out = new ObjectOutputStream(fileOut);
-
-            out.writeObject(this.getFiguresList());
-            out.writeObject(this.getComicsList());
-            out.writeObject(this.roles);
-
-            out.close();
-            fileOut.close();
-        } catch(IOException exc) {
-            exc.printStackTrace();
-            return false;
-        }
-
-        return true;
     }
 
     private void eliminateComic(MComic m) {
@@ -176,6 +183,8 @@ public class ComicDatabase {
     }
 
     public void eliminateFigure(Figure f) {
+        fcCache.clear();
+
         List<MComic> figureComics = getFigureComics(f);
 
         figures.remove(f.getId());

@@ -46,6 +46,13 @@ public class StandardReport implements Report {
         for(Figure f: figures) {
             out.println(f.getName());
         }
+
+        out.println();
+        out.format("Comics%n");
+        out.format("=========================");
+        for(MComic m: db.getComicsList()) {
+            out.println(m.getId() + " " + m.getTitle());
+        }
     }
 
     private void reportPopularFigures(int count) {
@@ -53,7 +60,11 @@ public class StandardReport implements Report {
 
         Collections.sort(figures, new Comparator<Figure>() {
             public int compare(Figure a, Figure b) {
-                return db.getFigureComics(a).size() - db.getFigureComics(b).size();
+                int aComicsCount = db.getFigureComics(a).size();
+                int bComicsCount = db.getFigureComics(b).size();
+
+                //Do descending sort
+                return bComicsCount - aComicsCount;
             }
         });
 
@@ -71,13 +82,19 @@ public class StandardReport implements Report {
     private void reportInfluentialFigures(int count) {
         List<Figure> figures = db.getFiguresList();
 
+        final Map<Integer, Double> cache = new HashMap<>();
+        for(Figure figure: figures) {
+            cache.put(figure.getId(), calculator.calculateIndividualInfluence(db, figure));
+        }
+
         Collections.sort(figures, new Comparator<Figure>() {
             public int compare(Figure a, Figure b) {
-                double d1 = calculator.calculateIndividualInfluence(db, a);
-                double d2 = calculator.calculateIndividualInfluence(db, b);
+                double d1 = cache.get(a.getId());
+                double d2 = cache.get(b.getId());
 
-                if ( d1 > d2 ) return 1;
-                if ( d1 < d2 ) return -1;
+                //reverse sort
+                if ( d1 > d2 ) return -1;
+                if ( d1 < d2 ) return 1;
 
                 return 0;
             }
@@ -85,11 +102,11 @@ public class StandardReport implements Report {
 
         out.println();
         out.format("Top %d influential characters%n", count);
-        out.format("=========================");
+        out.format("=========================%n");
         for(int i=0;i<count;i++) {
             Figure f = figures.get(i);
 
-            out.println(f.getName());
+            out.format("%s (%f)%n", f.getName(), cache.get(f.getId()));
         }
     }
 
@@ -99,25 +116,30 @@ public class StandardReport implements Report {
 
         out.println();
         out.format("Top %d characters with most coverage%n", count);
-        out.format("=========================");
+        out.format("=========================%n");
         for(int i=0;i<count;i++) {
             List<Figure> figures = db.getFiguresList();
 
+            final Map<Integer, Double> cache = new HashMap<>();
+            for(Figure figure: figures) {
+                cache.put(figure.getId(), calculator.calculateIndividualInfluence(db, figure));
+            }
+
             Collections.sort(figures, new Comparator<Figure>() {
                 public int compare(Figure a, Figure b) {
-                    double d1 = calculator.calculateIndividualInfluence(db, a);
-                    double d2 = calculator.calculateIndividualInfluence(db, b);
+                    double d1 = cache.get(a.getId());
+                    double d2 = cache.get(b.getId());
 
-                    if ( d1 > d2 ) return 1;
-                    if ( d1 < d2 ) return -1;
+                    if ( d1 > d2 ) return -1;
+                    if ( d1 < d2 ) return 1;
 
                     return 0;
                 }
             });
 
             //pick the most influential character
-            Figure f = figures.get(figures.size()-1);
-            out.println(f.getName());
+            Figure f = figures.get(0);
+            out.format("%s (%f)%n", f.getName(), cache.get(f.getId()));
 
             //Now remove this figure and his roles from the database
             db.eliminateFigure(f);
