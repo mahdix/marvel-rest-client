@@ -7,6 +7,9 @@ import com.mahdix.app.calculator.*;
 import com.mahdix.app.entities.*;
 import com.mahdix.app.datasource.*;
 
+/* The standard implementation for Report inteface based
+ * on the project requests
+ */
 public class StandardReport implements Report {
     private final ComicDatabase db;
     private final Calculator calculator;

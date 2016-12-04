@@ -5,14 +5,22 @@ import java.util.*;
 import com.mahdix.app.entities.*;
 import com.mahdix.app.datasource.*;
 
+/* The default implementation of Calculator interface.
+ */
 public class StandardCalculator implements Calculator {
 
+    /* Calculate influence of a character only based on his work experience and
+     * without paying attention to his co-characters (other characters that he has work with)
+     */
     private double calculateInfluence(ComicDatabase db, Figure f) {
         int figureComicCount = db.getFigureComics(f).size();
 
         return (double)figureComicCount / db.getComics().size();
     }
     
+    /* Calculate actual influence of a character based on his influence and work activity
+     * and his co-figures
+     */
     public double calculateIndividualInfluence(ComicDatabase db, Figure figure) {
         int totalComics = db.getComics().size();
 

@@ -1,14 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.codingricky</groupId>
+    <groupId>com.mahdix</groupId>
     <artifactId>marvel-rest-client</artifactId>
-    <version>0.1.2-SNAPSHOT</version>
+    <version>0.1</version>
     <packaging>jar</packaging>
 
     <name>marvel-rest-client</name>
-    <description>Client to access Marvel's rest api</description>
-    <url>http://github.com/codingricky/marvel-rest-client</url>
+    <description>Client to access Marvel's rest api and calculate some metrics</description>
     <licenses>
         <license>
             <name>The MIT License</name>

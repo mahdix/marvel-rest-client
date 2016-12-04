@@ -2,6 +2,8 @@ package com.mahdix.app.entities;
 
 import java.io.*;
 
+/* Represents a character in a comic.
+ */
 public class Figure implements Serializable
 {
     private String name;

@@ -5,6 +5,9 @@ import java.io.*;
 
 import com.mahdix.app.entities.*;
 
+/*
+ * This class is responsible for storing a collection of comics, figures (chracters) and roles (relation between chracter and comic)
+ */
 public class ComicDatabase {
     private Map<Integer, Figure> figures;
     private Map<Integer, MComic> comics;
@@ -45,6 +48,9 @@ public class ComicDatabase {
         return roles;
     }
 
+    /* Create a new instance of database. If database file exists, load the data else 
+     * create an empty database
+     */
     public ComicDatabase() {
         File f = new File("db");
         if(f.exists() && !f.isDirectory()) { 
@@ -187,5 +193,9 @@ public class ComicDatabase {
         for(MComic m: figureComics) {
             eliminateComic(m);
         }
+    }
+
+    public String toString() {
+        return String.format("[ComicDatabase(%d comics, %d characters, %d roles)]%n", this.comics.size(), this.figures.size(), this.roles.size());
     }
 }

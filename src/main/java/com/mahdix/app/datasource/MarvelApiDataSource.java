@@ -22,6 +22,8 @@ import com.github.codingricky.marvel.RestClient;
 
 import com.mahdix.app.entities.*;
 
+/* An implementation of DataSource interface for Marvel-API
+ */
 public class MarvelApiDataSource implements DataSource {
     private RestClient restClient;
     private ComicDatabase db;
@@ -74,7 +76,7 @@ public class MarvelApiDataSource implements DataSource {
         }
 
         db.save();
-        log("DB saved");
+        log("DB saved " + db.toString());
     }
 
     private void readAllComics() throws Exception {
@@ -98,7 +100,7 @@ public class MarvelApiDataSource implements DataSource {
             log(String.format("%d/%d comics read...",currentOffset, totalCount));
 
             db.save();
-            log("DB saved");
+            log("DB saved " + db.toString());
 
             if ( (currentOffset - initialSize) % 1000 == 0 ) {
                 Thread.sleep(1000);
@@ -121,7 +123,7 @@ public class MarvelApiDataSource implements DataSource {
             log(String.format("%d/%d comics character roles read...", counter, comics.size()));
 
             db.save();
-            log("DB saved");
+            log("DB saved " + db.toString());
         }
     }
 
