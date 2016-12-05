@@ -36,22 +36,15 @@ public class StandardReport implements Report {
 
         Collections.sort(figures, new Comparator<Figure>() {
             public int compare(Figure a, Figure b) {
-                return a.getName().compareTo(b.getName());
+                return a.getName().toLowerCase().compareTo(b.getName().toLowerCase());
             }
         });
 
         out.println();
         out.format("Sorted characters%n");
-        out.format("=========================");
+        out.format("=========================%n");
         for(Figure f: figures) {
             out.println(f.getName());
-        }
-
-        out.println();
-        out.format("Comics%n");
-        out.format("=========================");
-        for(MComic m: db.getComicsList()) {
-            out.println(m.getId() + " " + m.getTitle());
         }
     }
 
@@ -70,7 +63,7 @@ public class StandardReport implements Report {
 
         out.println();
         out.format("Top %d popular characters%n", count);
-        out.format("=========================");
+        out.format("=========================%n");
         for(int i=0;i<count;i++) {
             Figure f = figures.get(i);
             int comicCount = db.getFigureComics(f).size();
